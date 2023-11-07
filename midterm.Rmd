@@ -1,0 +1,216 @@
+---
+title: "Midterm Project"
+author: "Linh Bui"
+date: "`r Sys.Date()`"
+documentclass: article
+geometry: margin=1in
+fontsize: 11pt
+output:
+  pdf_document:
+    toc: false
+    df_print: kable
+    fig_caption: false
+    number_sections: false
+    dev: pdf
+    highlight: tango
+  html_document:
+    theme: default
+    self_contained: true
+    toc: false
+    df_print: kable
+    fig_caption: false
+    number_sections: false
+    smart: true
+    dev: svg
+---
+
+```{r setup, include = FALSE, echo=FALSE}
+# DO NOT ALTER THIS CHUNK
+knitr::opts_chunk$set(
+  echo = TRUE,
+  eval = TRUE,
+  fig.width = 5,
+  fig.asp = 0.618,
+  out.width = "70%",
+  dpi = 120,
+  fig.align = "center",
+  cache = FALSE
+)
+# Load required packages
+suppressPackageStartupMessages(library(tidyverse))
+polls <- readRDS("midterm_data.RDS")
+fl_gov_polls <- polls %>%
+  filter(
+    state == "Florida", 
+    office_type == "Governor", 
+    cycle == 2022,
+    candidate_name == "Ron DeSantis" | candidate_name == "Charlie Crist"
+    )
+```
+
+
+## Part 1
+
+### Exercise 1
+
+i. Each row in the dataset represents the polling percentage for a particular candidate. 
+
+ii. The 'sample_size' column contains data on the number of people who were sampled in each poll.
+
+iii. This dataset is in a tidy format because it meets the following three interrelated rules: 
+
+* Each variable must have its own column.
+* Each observation must have its own row.
+* Each value must have its own cell.
+
+### Exercise 2
+
+```{r}
+polls %>%
+ggplot() +
+geom_histogram(mapping = aes(x = pct)) +
+labs(title = "Distribution of the polling percentages for all candidates in all polls",
+x = "Polling percentage"
+)
+```
+
+* This is a bimodal and skewed left histogram. 
+
+* In my opinion, the reasons why there are 2 modes in the distribution is because there are two main political parties in the USA and also other parties. The first mode at around 4% represents the polling percentages of candidates from other parties than Republic and Democracy. On the other hand, the majority of votes are for candidates from those two main political parties, which explains why there is the second (higher) mode at around 46%. 
+
+### Exercise 3
+
+```{r}
+polls %>%
+ggplot() +
+  geom_histogram(mapping = aes(x = pct)) +
+  facet_wrap(~ party)+ 
+  labs(title = "Distribution of the polling percentages by parties",
+       x = "Polling percentage") 
+```
+
+* The pattern seems to support my hypothesized reason for the modality I saw in Exercise 2's histogram because except for the distribution of the polling percentages for Democratic and Republican Parties, the distribution of other parties seems to be scattered and centers more around low values. 
+
+### Exercise 4
+
+```{r}
+polls %>%
+  group_by(state) %>%
+  summarize(
+    n = n_distinct(poll_id)
+  ) %>%
+  arrange(desc(n)) %>%
+  head()
+```
+
+
+### Exercise 5
+
+```{r}
+fl_gov_polls %>%
+  group_by(candidate_name) %>%
+  summarize(
+    average_pct = mean(pct),
+    median_pct = median(pct),
+    sd_pct = sd(pct),
+    highest_pct = max(pct),
+    lowest_pct = min(pct)
+  )
+```
+
+* Ron DeSantis gets higher percentages in the polls. Specifically, he has higher avarage polling percentage (48.9), higher median percentage (49.5), higher max and min polling percentages (60.9 and 35.5, respectively), and lower standard deviation (3.78). 
+
+### Exercise 6
+
+```{r}
+fl_gov_polls %>%
+ggplot() +
+  geom_freqpoly(aes(x = pct, color = candidate_name))+
+  labs(title = "Distribution of polling percentage for the two candidates",
+       x = "Polling percentage")
+```
+
+* The distribution of polling percentage for Charlie Crist is unimodal and right_skewed. Meanwhile, the distribution of polling percentage for Ron DeSantis is unimodel and left_skewed. The mode of Charlie Crist's polling percentage distribution is around 45%. The graph of polling percentage of Ron DeSantis peaks at arounf 51%. 
+
+### Exercise 7
+
+```{r}
+fl_gov_polls %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = end_date, y = pct, color = candidate_name)) +
+  geom_smooth(mapping = aes(x = end_date, y = pct, color = candidate_name)) +
+  labs(title = "The covariation of polling percentage vs poll date for two candidates",
+       x = "poll date",
+       y = "percentage")
+```
+
+* As we can infer from the graph, Ron DeSantis has always been more popular than Charlie Crist over the time period. During the observed time period, at no time did the points on the trend line of Charlie Crist lie above the points on the trend line of Ron DeSantis. However, The two trend lines of these two candidates seem to be opposite each other. Specificaly, before October 2021, Ron DeSantis's trend line tended to slope down, while Charlie Crist's trend line tended to slope up. From October 2021 to February 2022, there was an increase in Ron DeSantis's distribution and a decrease in Charlie Crist's distribution. Finally, after February 2022, Ron DeSantis's trendline is quite horizontal while Charlie Crist's trendline is going up.
+
+## Part 2
+
+### Variables of Interest
+
+* The names of the two columns I have picked: party and pct.
+
+```{r}
+polls_2 <- polls %>%
+  filter(party == "DEM" | party == "REP")
+```
+
+### Summary Statistics
+
+```{r}
+polls_2 %>%
+  group_by(party) %>%
+  summarize(
+    average_pct = mean(pct),
+    median_pct = median(pct),
+    sd_pct = sd(pct),
+    highest_pct = max(pct),
+    lowest_pct = min(pct)
+  )
+```
+
+
+
+### Variation of Each Variable
+
+```{r}
+polls_2 %>% 
+  ggplot() + 
+  geom_histogram(mapping = aes(x = pct)) +
+  labs(title = "Distribution of the polling percentages for all candidates in 2 parties",
+       x = "Polling percentage") 
+```
+
+* This can be considered as a unimodal and left-skewed graph. It is centered on the value of 46%. This distribution looks quite the same as the distribution in Exercise 2. However, the mode centering around 4% disappeared because I used filter() function to remove all parties except for DEM and REP.
+
+```{r}
+polls_2 %>% 
+  ggplot() + 
+  geom_bar(mapping = aes(x = party)) +
+  labs(title = "Distribution of the number of votes for 2 parties",
+       x = "Two main political parties"
+)
+```
+
+* It can clearly be seen from this bar chart that the number of votes for REP is a little higher than those for DEM party. 
+
+### Covariation Between Variables
+
+```{r}
+polls_2 %>% 
+  ggplot() + 
+  geom_freqpoly(aes(x = pct, color = party)) +
+  labs(title = "The co-variation between two main parties and percentage",
+       x = "Polling Percentage"
+)
+```
+
+* In general, there is a strong relationship between the two variable: party and percentage. The distribution line of the Republian Party fluctuates more than Democracy's distribution does. The pct variable (the first variable) is reflecting which party (the second variable) has a good chance of taking the lead in the race for the upcoming US presidency.
+
+### Interpretation
+
+* As an international student, I do not have a lot knowledge about the U.S. political election. However, after playing with the data, I can realize that both of the percentage of votes (polling percentage) and the number of votes (count) for the Republican Party has been higher than those for Democratic Party. Both distributions of the polling percentage of two parties peak at around 46%. However, the count for Republian Party at peak is higher (around 220) than that of Democracy (around 205). From these information, I can infer that the Repubican Party is having the advantage and receiving more support from the sample of the country's population than the other party. If this trend accurately reflects the future voting trend in reality, it is very likely that the next president of the United States will be from the Republican Party.
+
+
